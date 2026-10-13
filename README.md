@@ -121,7 +121,11 @@ build/          app icon and the packaging script
 
 ## Built with
 
-[Electron](https://www.electronjs.org), and [electron-chrome-extensions](https://github.com/samuelmaddock/electron-browser-shell) for extension support. The latter is licensed under GPL-3.0, which applies to Sade as well if it is distributed.
+[Electron](https://www.electronjs.org), and [electron-chrome-extensions](https://github.com/samuelmaddock/electron-browser-shell) for extension support.
+
+## License
+
+[GPL-3.0](LICENSE). Sade uses electron-chrome-extensions under its GPL-3.0 option, so Sade is released under the same license.
 
 ---
 

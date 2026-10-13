@@ -17,5 +17,6 @@
   "devDependencies": {
     "@electron/packager": "^20.3.0",
     "electron": "^44.7.0"
-  }
+  },
+  "license": "GPL-3.0-only"
 }
