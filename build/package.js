@@ -31,7 +31,7 @@ async function main() {
       NSMicrophoneUsageDescription: 'A website you allowed wants to use the microphone.',
       NSLocationUsageDescription: 'A website you allowed wants to use your location.',
     },
-    ignore: [/^\/dist($|\/)/, /^\/build($|\/)/, /^\/start\.command$/, /^\/build\.command$/],
+    ignore: [/^\/dist($|\/)/, /^\/build($|\/)/, /^\/docs($|\/)/, /^\/README\.md$/, /^\/start\.command$/, /^\/build\.command$/],
     prune: true,
     asar: false, // keep plain files so preloads and sade:// pages load straight from disk
   })
