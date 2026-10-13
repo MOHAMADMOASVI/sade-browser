@@ -1,0 +1,418 @@
+/* Dashboard: one quiet column in the middle of the page. Date, a single line for
+   weather and today's occasion, the search field, then sites as a row of icons.
+   One accent, turquoise, used sparingly. */
+:root {
+  --turq: #0f9d8f; /* dark enough to read as text on the light surface */
+  --turq-soft: rgba(15, 157, 143, 0.16);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --turq: #35d6c3;
+    --turq-soft: rgba(53, 214, 195, 0.16);
+  }
+}
+html,
+body {
+  height: 100%;
+  overflow: auto;
+  background: var(--bg);
+  font-size: 13px;
+}
+main {
+  min-height: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  /* A little above the middle; it reads as centred to the eye. */
+  padding: 24px 24px 14vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+p,
+h2 {
+  margin: 0;
+}
+
+/* ---- Date */
+#date {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+}
+#weekday {
+  color: var(--turq);
+  font-size: 15px;
+  font-weight: 600;
+}
+#day {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+#other-dates {
+  margin-top: 6px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+/* ---- Weather and occasion, on one line */
+#strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  min-height: 30px;
+  margin: 18px 0 22px;
+  line-height: 1.6;
+}
+#strip > span:empty {
+  display: none;
+}
+#weather:not(:empty) + #occasion:not(:empty)::before {
+  content: '·';
+  margin-inline-end: 10px;
+  color: var(--dim);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 10px;
+  margin: 0 -4px;
+  border-radius: 9px;
+  transition:
+    background-color 0.14s,
+    color 0.14s;
+}
+button.chip:hover {
+  background: var(--hover);
+}
+.chip .glyph {
+  font-size: 15px;
+  line-height: 1;
+}
+.chip .dim,
+#occasion .dim {
+  color: var(--dim);
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 8px;
+  border-radius: 50%;
+  background: var(--turq);
+  vertical-align: middle;
+}
+.city-form {
+  display: inline-flex;
+  gap: 6px;
+  animation: drift 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.city-form input {
+  width: 150px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 9px;
+  caret-color: var(--turq);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  user-select: text;
+  transition: box-shadow 0.18s;
+}
+.city-form input:focus {
+  box-shadow:
+    0 0 0 1.5px var(--turq),
+    0 0 0 4px var(--turq-soft);
+}
+.city-form button {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 9px;
+  color: var(--turq);
+  background: var(--turq-soft);
+  transition: transform 0.12s;
+}
+.city-form button:active {
+  transform: scale(0.95);
+}
+.loading {
+  color: var(--dim);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ---- Search */
+#search {
+  position: relative;
+  width: 100%;
+  text-align: start;
+}
+#search svg {
+  position: absolute;
+  inset-inline-start: 20px;
+  top: 18px;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--dim);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+  transition: stroke 0.2s;
+}
+#q {
+  display: block;
+  width: 100%;
+  height: 56px;
+  padding-inline: 52px 22px;
+  border-radius: 18px;
+  font-size: 17px;
+  caret-color: var(--turq);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  user-select: text;
+  transition: box-shadow 0.22s;
+  /* The field keeps the page's direction, so the icon, the padding and the text
+     all start from the same side. Each piece of typed text still reads in its own
+     direction (an address stays left-to-right inside a Persian page). */
+  unicode-bidi: plaintext;
+  text-align: left;
+}
+[dir='rtl'] #q {
+  text-align: right;
+}
+#q::placeholder {
+  color: var(--dim);
+}
+#q:focus {
+  box-shadow:
+    0 0 0 1.5px var(--turq),
+    0 0 0 5px var(--turq-soft);
+}
+#search:focus-within svg {
+  stroke: var(--turq);
+}
+#suggestions {
+  position: absolute;
+  inset-inline: 0;
+  top: 66px;
+  z-index: 2;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow:
+    0 0 0 0.5px var(--line),
+    0 18px 44px rgba(0, 0, 0, 0.22);
+  animation: drop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  transition: background-color 0.09s;
+}
+.row.selected {
+  background: var(--hover);
+}
+.row.selected::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 11px;
+  bottom: 11px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--turq);
+}
+.row img,
+.row .glyph {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  font-size: 12px;
+}
+.row .title {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .url {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .kind {
+  flex: none;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+/* ---- Sites: last visited and most visited, as one row of icons */
+#sites {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 26px;
+  margin-top: 34px;
+  max-width: 100%;
+}
+#sites section + section:not([hidden]) {
+  padding-inline-start: 26px;
+  border-inline-start: 0.5px solid var(--line);
+}
+#recent-section[hidden] + #top-section {
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+h2 {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dim);
+}
+.icons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.site {
+  position: relative;
+  display: block;
+  padding: 6px;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+  transition:
+    background-color 0.16s,
+    transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.site:hover {
+  background: var(--hover);
+  transform: translateY(-3px);
+}
+.site:hover .icon {
+  box-shadow: 0 0 0 1.5px var(--turq);
+}
+.site:active {
+  transform: scale(0.94);
+}
+.icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.16s;
+}
+.icon img {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+/* The site's name appears under its icon on hover, so the row itself stays bare. */
+.site .name {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  padding: 3px 8px;
+  border-radius: 7px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--fg);
+  background: var(--panel);
+  box-shadow: 0 0 0 0.5px var(--line);
+  opacity: 0;
+  transform: translate(-50%, -3px);
+  pointer-events: none;
+  transition:
+    opacity 0.14s,
+    transform 0.14s;
+}
+.site:hover .name {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+[hidden] {
+  display: none !important;
+}
+
+/* Entrance: each line of the column settles in after the one above it. */
+body.enter main > * {
+  animation: drift 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(var(--order, 0) * 70ms);
+}
+body.enter .site {
+  animation: pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
+  animation-delay: calc(var(--i, 0) * 35ms + 300ms);
+}
+@keyframes drift {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+.swap {
+  animation: drift 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (max-width: 560px) {
+  #sites {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  #sites section + section:not([hidden]) {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

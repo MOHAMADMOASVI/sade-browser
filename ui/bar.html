@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src * data: crx:; style-src 'self' 'unsafe-inline'"
+    />
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="bar.css" />
+  </head>
+  <body>
+    <div id="bar">
+      <button id="back" class="icon">
+        <svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5" /></svg>
+      </button>
+      <button id="forward" class="icon">
+        <svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5" /></svg>
+      </button>
+      <button id="reload" class="icon">
+        <svg viewBox="0 0 16 16">
+          <path class="arrow" d="M13 8a5 5 0 1 1-1.6-3.7M13 2.6v3.2H9.8" />
+          <path class="ring-soft" d="M8 2.6A5.4 5.4 0 1 0 13.4 8" />
+          <g class="ring-hard">
+            <path d="M8 2.6A5.4 5.4 0 0 1 13.4 8M8 13.4A5.4 5.4 0 0 1 2.6 8" />
+            <circle cx="8" cy="8" r="1.2" />
+          </g>
+        </svg>
+      </button>
+      <div id="tabs"></div>
+      <button id="new" class="icon">
+        <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" /></svg>
+      </button>
+      <div id="spacer"></div>
+      <span id="toast" hidden></span>
+      <span id="private" hidden></span>
+      <div id="find" hidden>
+        <input id="find-input" spellcheck="false" dir="auto" />
+        <span id="find-count"></span>
+      </div>
+      <button id="download" hidden></button>
+      <browser-action-list id="actions"></browser-action-list>
+      <button id="settings" class="icon">
+        <svg viewBox="0 0 16 16">
+          <path d="M2.5 5h6M12 5h1.5M2.5 11H4M7.5 11h6" />
+          <circle cx="10.2" cy="5" r="1.7" />
+          <circle cx="5.8" cy="11" r="1.7" />
+        </svg>
+      </button>
+    </div>
+    <script src="strings.js"></script>
+    <script src="bar.js"></script>
+  </body>
+</html>

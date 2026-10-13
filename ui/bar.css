@@ -1,0 +1,511 @@
+body {
+  background: var(--bg);
+}
+#bar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px 0 82px;
+  -webkit-app-region: drag;
+  /* Entering full screen: the tabs glide into the space the window buttons leave. */
+  transition: padding-left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* A window in the background steps back, like other Mac apps. */
+#bar > * {
+  transition: opacity 0.25s;
+}
+body.inactive #bar > :not(#spacer) {
+  opacity: 0.5;
+}
+body.fullscreen #bar {
+  padding-left: 10px;
+}
+#bar > * {
+  -webkit-app-region: no-drag;
+}
+#spacer {
+  flex: 1 0 40px;
+  align-self: stretch;
+  -webkit-app-region: drag;
+}
+
+.icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--dim);
+}
+.icon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon {
+  transition:
+    background-color 0.14s,
+    color 0.14s,
+    opacity 0.14s,
+    transform 0.12s;
+}
+.icon:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.icon:active {
+  transform: scale(0.88);
+}
+.icon:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+#reload {
+  margin-right: 6px;
+}
+/* Reload button: blue while a plain reload runs, yellow for one that skips the
+   cache. It keeps turning until the page has loaded, then finishes the lap. */
+#reload.soft {
+  color: var(--accent);
+}
+#reload.hard {
+  color: #f0a500;
+}
+/* Three drawings share the button: the reload arrow at rest, an open ring for a
+   plain reload, and a split ring with a centre dot for one that skips the cache.
+   The turning itself is driven from bar.js, at the pace the data is arriving. */
+#reload svg > * {
+  transition: opacity 0.18s;
+}
+#reload .ring-soft,
+#reload .ring-hard {
+  opacity: 0;
+}
+#reload .ring-hard circle {
+  fill: currentColor;
+  stroke: none;
+}
+#reload.soft .arrow,
+#reload.hard .arrow {
+  opacity: 0;
+}
+#reload.soft .ring-soft,
+#reload.hard .ring-hard {
+  opacity: 1;
+}
+
+#tabs {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 8px;
+  flex: 0 1 auto;
+  width: 150px;
+  min-width: 34px;
+  overflow: hidden;
+  color: var(--dim);
+  transition:
+    width 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.16s,
+    color 0.16s,
+    box-shadow 0.16s;
+}
+.tab:active:not(.active) {
+  transform: scale(0.97);
+}
+.tab:hover {
+  background: var(--hover);
+}
+.tab.active {
+  flex: 0 0.2 auto;
+  width: 320px;
+  min-width: 120px;
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  color: var(--fg);
+}
+.tab .fav {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 3px;
+}
+.tab .dot {
+  width: 6px;
+  height: 6px;
+  margin: 0 4px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+.tab .label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab .sub {
+  color: var(--dim);
+}
+.tab .close {
+  display: none;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 5px;
+  place-items: center;
+  color: var(--dim);
+}
+.tab .close svg {
+  width: 8px;
+  height: 8px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.tab:hover .close {
+  display: grid;
+}
+.tab .close:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+/* Loading: a soft light sweeping along the bottom edge; fades out when done. */
+.tab::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 45%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent) 40%, var(--accent) 60%, transparent);
+  opacity: 0;
+  transform: translateX(-100%);
+  transition: opacity 0.35s;
+}
+.tab.loading::after {
+  opacity: 1;
+  animation: load 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes load {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(225%);
+  }
+}
+
+/* Tabs grow in when opened and collapse when closed. */
+.tab.opening {
+  animation: tab-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tab.closing {
+  pointer-events: none;
+  animation: tab-out 0.2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+@keyframes tab-in {
+  from {
+    width: 0;
+    min-width: 0;
+    padding-inline: 0;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+@keyframes tab-out {
+  to {
+    width: 0;
+    min-width: 0;
+    padding-inline: 0;
+    margin-inline-end: -2px;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+.tab .fav {
+  animation: fade-in 0.25s;
+}
+.tab .close {
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+}
+
+/* Find box and download pill pop in from the right. */
+#find:not([hidden]),
+#download:not([hidden]) {
+  animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+#download {
+  transition:
+    background-color 0.14s,
+    color 0.14s;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px) scale(0.96);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The active tab while its address is being edited. */
+.tab .address {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  font-size: 12.5px;
+  user-select: text;
+}
+.tab .address[hidden] {
+  display: none;
+}
+.tab.editing {
+  width: 460px;
+  box-shadow:
+    0 0 0 1.5px var(--accent),
+    0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.tab.editing .label,
+.tab.editing .star,
+.tab.editing .close {
+  display: none;
+}
+
+/* A tab being dragged lifts off the strip and follows the pointer. */
+.tab.dragged {
+  z-index: 3;
+  background: var(--lift);
+  color: var(--fg);
+  box-shadow:
+    0 0 0 0.5px var(--line),
+    0 8px 22px rgba(0, 0, 0, 0.28);
+  transition:
+    box-shadow 0.18s,
+    background-color 0.18s;
+}
+.tab.dragged.settling {
+  box-shadow: 0 0 0 0 transparent;
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.22s,
+    background-color 0.22s;
+}
+
+/* Bookmark star inside the active tab. */
+.tab .star {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  color: #f5a623;
+  transition: transform 0.12s;
+}
+.tab .star[hidden] {
+  display: none;
+}
+.tab .star svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+.tab .star:hover {
+  background: var(--hover);
+}
+.tab .star:active {
+  transform: scale(0.85);
+}
+
+/* Toast: a short confirmation that appears in the bar and fades away. */
+#toast {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--fg);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  animation: toast-in 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.25);
+}
+#toast[hidden] {
+  display: none;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+}
+#toast.leaving,
+#find.leaving {
+  animation: leave 0.15s ease-in forwards;
+}
+@keyframes leave {
+  to {
+    opacity: 0;
+    transform: translateX(8px) scale(0.96);
+  }
+}
+
+/* Download progress along the bottom edge of its pill. */
+#download {
+  position: relative;
+}
+#download::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.5s 0.4s,
+    background-color 0.3s;
+}
+#download.done::after {
+  background: var(--good);
+  opacity: 0;
+}
+
+/* Find: no match. */
+#find {
+  transition: box-shadow 0.18s;
+}
+#find.nomatch {
+  box-shadow: 0 0 0 1.5px var(--bad);
+}
+#find.nomatch #find-count {
+  color: var(--bad);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .tab.closing {
+    display: none;
+  }
+}
+
+#find {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+}
+#find[hidden],
+#download[hidden] {
+  display: none;
+}
+#find-input {
+  width: 150px;
+  user-select: text;
+}
+#find-count {
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+#download {
+  height: 28px;
+  max-width: 200px;
+  padding: 0 9px;
+  border-radius: 8px;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#download:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+#actions::part(action) {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+
+/* Pinned tabs: icon only, grouped at the left. */
+.tab.pinned {
+  flex: none;
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
+  justify-content: center;
+}
+.tab.pinned .label,
+.tab.pinned .close {
+  display: none;
+}
+.tab.pinned.active {
+  flex: none;
+  width: 34px;
+  min-width: 34px;
+}
+#tabs.dragging .tab {
+  pointer-events: none;
+}
+
+/* Private windows are always dark, whatever the system theme. */
+body.private {
+  --bg: #141416;
+  --fg: #f2f2f3;
+  --dim: #8e8e93;
+  --hover: rgba(255, 255, 255, 0.07);
+  --pill: rgba(255, 255, 255, 0.1);
+  --pill-shadow: none;
+  --lift: #3a3a3e;
+  --line: rgba(255, 255, 255, 0.1);
+}
+#private {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 6px;
+}
+#private[hidden],
+#actions[hidden] {
+  display: none;
+}

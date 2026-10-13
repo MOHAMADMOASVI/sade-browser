@@ -1,0 +1,293 @@
+html,
+body {
+  overflow: auto;
+  background: var(--bg);
+  font-size: 13px;
+}
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 14px;
+  background: var(--bg);
+}
+nav {
+  position: relative;
+  display: flex;
+  gap: 2px;
+}
+#pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+  transition:
+    left 0.3s cubic-bezier(0.2, 0.85, 0.25, 1.1),
+    width 0.3s cubic-bezier(0.2, 0.85, 0.25, 1.1),
+    background-color 0.35s;
+}
+#pill.instant {
+  transition: none;
+}
+nav a {
+  position: relative;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--dim);
+  text-decoration: none;
+  cursor: default;
+}
+nav a:hover {
+  background: var(--hover);
+}
+nav a.current,
+nav a.current:hover {
+  color: var(--fg);
+  background: none;
+}
+#search {
+  flex: 1;
+  min-width: 80px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--hover);
+  user-select: text;
+}
+#clear,
+.row button,
+.edit button {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 7px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+#clear:hover,
+.row button:hover,
+.edit button:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+#clear[hidden] {
+  display: none;
+}
+h2 {
+  margin: 22px 10px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding-inline: 10px 4px;
+  border-radius: 8px;
+}
+.row:hover {
+  background: var(--hover);
+}
+.row .main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+}
+.row .title {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .sub {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--dim);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .meta {
+  flex: none;
+  color: var(--dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.row .actions {
+  flex: none;
+  display: flex;
+  visibility: hidden;
+}
+.row:hover .actions {
+  visibility: visible;
+}
+.row.failed .title {
+  color: var(--dim);
+  text-decoration: line-through;
+}
+.edit {
+  display: flex;
+  gap: 8px;
+  padding-block: 4px 8px;
+  padding-inline: 10px 4px;
+}
+.edit input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 7px;
+  background: var(--pill);
+  box-shadow: 0 0 0 0.5px var(--line);
+  user-select: text;
+}
+.edit input:last-of-type {
+  flex: 0 1 200px;
+}
+#empty {
+  margin: 60px 0;
+  text-align: center;
+  color: var(--dim);
+}
+#more {
+  display: block;
+  margin: 14px auto 0;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--dim);
+}
+#more:hover {
+  background: var(--hover);
+}
+
+/* Settings */
+#search[hidden] {
+  display: none;
+}
+.row.setting {
+  min-height: 44px;
+  padding-inline-end: 6px;
+}
+.row.setting:hover {
+  background: none;
+}
+.row.setting .main {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.row.setting .sub {
+  flex: none;
+  max-width: 100%;
+}
+.row.setting button,
+.row.setting select {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  color: var(--fg);
+  background: var(--pill);
+  box-shadow: 0 0 0 0.5px var(--line);
+  outline: 0;
+}
+.row.setting button:hover {
+  background: var(--hover);
+}
+
+/* Motion */
+nav a,
+.row,
+.row button,
+#clear,
+#more,
+.edit button,
+.row.setting select {
+  transition:
+    background-color 0.14s,
+    color 0.14s,
+    box-shadow 0.14s;
+}
+.row button:active,
+#clear:active,
+.edit button:active {
+  transform: scale(0.95);
+}
+/* A section's content rises into place when you switch to it. */
+#list.enter > * {
+  animation: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: calc(min(var(--i), 14) * 18ms);
+}
+#empty:not([hidden]) {
+  animation: rise 0.3s 0.05s backwards;
+}
+.edit {
+  animation: rise 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Revealed passwords: selectable, in a fixed-width face. */
+.row .meta {
+  user-select: text;
+}
+
+.hint {
+  margin: 28px 10px;
+  color: var(--dim);
+}
+
+/* The sticky header gains a hairline once content scrolls beneath it. */
+header {
+  box-shadow: 0 1px 0 transparent;
+  transition:
+    box-shadow 0.25s,
+    background-color 0.35s;
+}
+header.scrolled {
+  box-shadow: 0 1px 0 var(--line);
+}
+/* A value that just changed (password shown, "Copied") blurs into place. */
+.row .meta.flash {
+  animation: swap 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes swap {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(3px);
+  }
+}

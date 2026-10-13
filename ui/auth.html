@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+    <link rel="stylesheet" href="theme.css" />
+    <style>
+      body {
+        background: var(--bg);
+        padding: 20px;
+      }
+      h1 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+      p {
+        margin: 0 0 14px;
+        color: var(--dim);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      input {
+        display: block;
+        width: 100%;
+        height: 30px;
+        margin-bottom: 8px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: var(--pill);
+        box-shadow: 0 0 0 0.5px var(--line);
+        font-size: 13px;
+        user-select: text;
+      }
+      input:focus {
+        box-shadow: 0 0 0 2px var(--accent);
+      }
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      button {
+        height: 28px;
+        padding: 0 14px;
+        border-radius: 7px;
+        background: var(--pill);
+        box-shadow: 0 0 0 0.5px var(--line);
+      }
+      button[type='submit'] {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: none;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="form">
+      <h1 id="title"></h1>
+      <p id="detail"></p>
+      <input id="username" autocomplete="off" spellcheck="false" dir="auto" autofocus />
+      <input id="password" type="password" autocomplete="off" dir="auto" />
+      <div class="buttons">
+        <button type="button" id="cancel"></button>
+        <button type="submit" id="submit"></button>
+      </div>
+    </form>
+    <script src="strings.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src * data:; style-src 'self'" />
+    <title>Library</title>
+    <link rel="stylesheet" href="theme.css" />
+    <link rel="stylesheet" href="library.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <nav id="nav">
+          <span id="pill"></span>
+          <a href="#bookmarks"></a>
+          <a href="#history"></a>
+          <a href="#downloads"></a>
+          <a href="#passwords"></a>
+          <a href="#permissions"></a>
+          <a href="#settings"></a>
+        </nav>
+        <input id="search" spellcheck="false" autocomplete="off" dir="auto" />
+        <button id="clear" hidden></button>
+      </header>
+      <div id="list"></div>
+      <p id="empty" hidden></p>
+    </main>
+    <script src="strings.js"></script>
+    <script src="library.js"></script>
+  </body>
+</html>

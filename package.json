@@ -1,0 +1,21 @@
+{
+  "name": "sade",
+  "productName": "Sade",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A minimal browser",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node build/package.js"
+  },
+  "dependencies": {
+    "bplist-parser": "^0.5.0",
+    "electron-chrome-extensions": "^4.9.0",
+    "electron-chrome-web-store": "^0.13.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^44.7.0"
+  }
+}
