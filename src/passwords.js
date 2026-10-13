@@ -16,7 +16,7 @@ const { sqlite } = require('./importers')
 const { t } = require('./i18n')
 
 const UNLOCK_MS = 5 * 60 * 1000
-const BAR = 40
+const BAR = 56 // height of the window's bar, above the page
 
 let store = null
 let unlockedUntil = 0

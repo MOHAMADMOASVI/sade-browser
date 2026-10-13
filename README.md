@@ -1,6 +1,6 @@
 # Sade
 
-A minimal web browser for macOS. The whole interface is one 40-pixel bar; the rest of the window is the page.
+A minimal web browser for macOS. The whole interface is one slim bar; the rest of the window is the page.
 
 *Sade* (ساده) is Persian for "simple".
 
@@ -11,7 +11,7 @@ A minimal web browser for macOS. The whole interface is one 40-pixel bar; the re
 ## Features
 
 **Interface**
-- One bar: back, forward, reload, tabs, extension buttons and settings. Nothing else.
+- One bar: back, forward, reload, tabs, a toolbox and settings. Nothing else.
 - The active tab doubles as the address field. Click it (or press `⌘L`) to edit the address in place.
 - Tabs can be dragged to reorder, pinned, duplicated and moved to a new window.
 - Light and dark themes, following the system or set by hand.
@@ -30,7 +30,8 @@ A minimal web browser for macOS. The whole interface is one 40-pixel bar; the re
 - Find in page, zoom, printing, the built-in PDF viewer and HTTP sign-in prompts.
 - Two-finger swipe for back and forward, with an on-screen hint.
 - Per-site permission prompts (camera, microphone, location, notifications) that can be revoked later.
-- A reload button that shows what it is doing: blue for a plain reload, yellow for one that skips the cache, turning faster or slower with the real download speed.
+- A reload button that shows what it is doing: blue for a plain reload, yellow for one that skips the cache, turning faster or slower with the real download speed. The back and forward arrows animate the same way while a page is on its way.
+- A toolbox at the end of the bar: full screen, page translation, a phone or tablet preview of the page, zoom, and the buttons of your extensions.
 
 **Your data**
 - A built-in password manager. Passwords are encrypted with a key held in the macOS Keychain; showing or copying one asks for Touch ID.
@@ -66,7 +67,8 @@ Two double-clickable scripts do the same from Finder: `start.command` runs Sade 
 | New tab | `⌘T` |
 | New window / new private window | `⌘N` / `⇧⌘N` |
 | Edit the address | `⌘L` |
-| Close tab / reopen closed tab | `⌘W` / `⇧⌘T` |
+| Close tab / reopen closed tab | `⌘W` / `⌘Z` or `⇧⌘T` |
+| Show or hide Sade from any app (off by default) | `⌘M` |
 | Next / previous tab | `⌃Tab` / `⌃⇧Tab` |
 | Jump to tab 1–8, last tab | `⌘1`–`⌘8`, `⌘9` |
 | Back / forward | `⌘[` / `⌘]` |
@@ -83,10 +85,11 @@ Two double-clickable scripts do the same from Finder: `start.command` runs Sade 
 
 Everything Sade remembers stays on your Mac, in `~/Library/Application Support/Sade`. There is no account and no sync.
 
-Two features talk to an outside service:
+Three features talk to an outside service:
 
 - **Weather** sends the coordinates of the city you chose to [Open-Meteo](https://open-meteo.com). Nothing is sent until you enter a city.
 - **Extensions** are downloaded from the Chrome Web Store when you install them.
+- **Translate page** sends the page's address to Google Translate, which fetches and translates it. It only runs when you choose it, and cannot translate pages that need a sign-in.
 
 Importing from another browser reads that browser's files on your Mac. Importing Chrome's passwords makes macOS ask for your Mac password first; Safari's bookmarks and history need Full Disk Access.
 
@@ -98,6 +101,7 @@ Importing from another browser reads that browser's files on your Mac. Importing
 - **Sign-in with Google** may be refused on some sites.
 - **Passwords.** There is no sync with iCloud Keychain or a Google account, sign-in forms inside frames are not detected, and there are no one-time codes.
 - **Occasions.** Islamic dates are calculated rather than based on moon sighting, so they can be a day off from the official calendar.
+- **Device preview.** The phone and tablet previews set the page's size and identify as an iPhone or iPad, but the engine is still Chromium, not mobile Safari.
 - **Signing.** Because the build is signed ad hoc, macOS may ask again for Keychain access after each new build.
 
 ## Project layout
@@ -112,6 +116,7 @@ src/            main process
   weather.js      weather lookup
 ui/             pages and the scripts that run inside tabs
   bar.*           the top bar
+  toolbox.*       the toolbox panel
   dashboard.*     the new-tab page
   library.*       bookmarks, history, downloads, passwords, permissions, settings
   occasions.js    the calendar of occasions
@@ -131,7 +136,7 @@ build/          app icon and the packaging script
 
 ## فارسی
 
-Sade («ساده») یک مرورگر مینیمال برای macOS است. کل رابط کاربری یک نوار ۴۰ پیکسلی است و بقیهٔ پنجره صفحهٔ وب.
+Sade («ساده») یک مرورگر مینیمال برای macOS است. کل رابط کاربری یک نوار باریک است و بقیهٔ پنجره صفحهٔ وب.
 
 - **رابط:** تب فعال همان نوار آدرس است؛ با کلیک روی آن یا `⌘L` آدرس را همان‌جا ویرایش می‌کنید. سه زبان فارسی، انگلیسی و روسی دارد.
 - **داشبورد:** تاریخ شمسی، میلادی و قمری، مناسبت روز، آب‌وهوا، جست‌وجو، و آخرین و پربازدیدترین سایت‌ها.

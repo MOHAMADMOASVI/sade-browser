@@ -339,6 +339,14 @@ renderers.settings = async () => {
       ]),
     ),
     setting(
+      t('Open Sade from anywhere'),
+      t('⌘M in any app shows or hides Sade, while Sade is running. It replaces “Minimize”.'),
+      choice('summon', settings.summon, [
+        [false, t('Off')],
+        [true, t('On')],
+      ]),
+    ),
+    setting(
       t('When Sade opens'),
       t('Restored tabs load only when you switch to them'),
       choice('restore', settings.restore, [

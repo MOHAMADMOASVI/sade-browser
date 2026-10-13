@@ -1,7 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
-const { app, BrowserWindow, Menu, ipcMain, nativeTheme, session, shell, dialog, net, protocol } = require('electron')
+const { app, BrowserWindow, Menu, globalShortcut, ipcMain, nativeTheme, session, shell, dialog, net, protocol, webContents } = require('electron')
 const { ElectronChromeExtensions } = require('electron-chrome-extensions')
 const { installChromeWebStore, uninstallExtension } = require('electron-chrome-web-store')
 
@@ -179,6 +179,28 @@ app.on('login', (event, contents, _details, authInfo, callback) => {
   })
 })
 
+// ------------------------------------------------------------------- summon
+// Optional system-wide shortcut: ⌘M from any app brings Sade forward, and hides
+// it again when it is already in front. It only exists while Sade is running,
+// and while it does, it takes ⌘M away from "Minimize" in every app.
+
+const SUMMON_KEY = 'Command+M'
+
+function summon() {
+  const w = cur()
+  if (!w) return new BrowserWin({ restore: data.stores.settings.data.restore })
+  if (w.win.isFocused()) return app.hide()
+  if (w.win.isMinimized()) w.win.restore()
+  app.show()
+  w.win.show()
+  app.focus({ steal: true })
+}
+
+function applySummonShortcut() {
+  globalShortcut.unregister(SUMMON_KEY)
+  if (data.stores.settings.data.summon) globalShortcut.register(SUMMON_KEY, summon)
+}
+
 // ------------------------------------------------------------------ actions
 
 async function importFrom(key, label) {
@@ -234,6 +256,33 @@ function makeDefaultBrowser() {
   app.setAsDefaultProtocolClient('https')
 }
 
+const reopenClosedTab = () => cur()?.closedUrls.length && cur().createTab(cur().closedUrls.pop())
+
+// ⌘Z, as in Safari: undo typing when the cursor is in a field that has text;
+// otherwise bring back the tab that was closed last.
+async function undoOrReopen() {
+  const focused = webContents.getFocusedWebContents()
+  let typing = false
+  if (focused) {
+    typing = await focused
+      .executeJavaScript(
+        `(() => {
+          let el = document.activeElement
+          while (el && el.shadowRoot && el.shadowRoot.activeElement) el = el.shadowRoot.activeElement
+          if (!el) return false
+          if (el.tagName === 'IFRAME' || el.isContentEditable) return true
+          const textual = el.tagName === 'TEXTAREA' ||
+            (el.tagName === 'INPUT' && !['button', 'checkbox', 'radio', 'submit', 'range', 'color', 'file'].includes(el.type))
+          return textual && el.value !== ''
+        })()`,
+        true,
+      )
+      .catch(() => false)
+  }
+  if (typing) focused.undo()
+  else reopenClosedTab()
+}
+
 const newTab = (url) => (cur() ? cur().createTab(url) : new BrowserWin(url ? { urls: [url] } : { restore: true }))
 const library = (section) => () => {
   if (!cur()) new BrowserWin({ urls: [`sade://app/library.html#${section}`] })
@@ -262,11 +311,7 @@ BrowserWin.commands = [
 // --------------------------------------------------------------------- menu
 
 function buildMenu() {
-  const zoom = (delta) => () => {
-    if (!wc()) return
-    wc().setZoomLevel(delta === 0 ? 0 : wc().getZoomLevel() + delta)
-    cur().toast(`${Math.round(1.2 ** wc().getZoomLevel() * 100)}%`)
-  }
+  const zoom = (delta) => () => cur()?.zoom(delta)
   const installed = session.defaultSession.extensions.getAllExtensions()
 
   Menu.setApplicationMenu(
@@ -298,7 +343,7 @@ function buildMenu() {
           {
             label: t('Reopen Closed Tab'),
             accelerator: 'Shift+Cmd+T',
-            click: () => cur()?.closedUrls.length && cur().createTab(cur().closedUrls.pop()),
+            click: reopenClosedTab,
           },
           { type: 'separator' },
           { label: t('Import from Chrome…'), click: () => importFrom('chrome', 'Chrome') },
@@ -323,7 +368,7 @@ function buildMenu() {
       {
         label: t('Edit'),
         submenu: [
-          { role: 'undo', label: t('Undo') },
+          { label: t('Undo'), accelerator: 'Cmd+Z', click: undoOrReopen },
           { role: 'redo', label: t('Redo') },
           { type: 'separator' },
           { role: 'cut', label: t('Cut') },
@@ -397,7 +442,8 @@ function buildMenu() {
         label: t('Window'),
         role: 'window',
         submenu: [
-          { role: 'minimize', label: t('Minimize') },
+          // ⌘M is taken while the open-from-anywhere shortcut is on.
+          { role: 'minimize', label: t('Minimize'), ...(data.stores.settings.data.summon ? { accelerator: 'Alt+Cmd+M' } : {}) },
           { role: 'zoom', label: t('Zoom') },
           { type: 'separator' },
           {
@@ -445,6 +491,23 @@ function registerIpc() {
   ipcMain.on('nav:forward', fromUi((w) => w.swipe('forward')))
   ipcMain.on('nav:reload', fromUi((w, hard) => w.reload(!!hard)))
   ipcMain.on('settings:open', fromUi((w) => w.openLibrary('settings')))
+  // The toolbox.
+  ipcMain.on('tools:toggle', fromUi((w) => w.toggleTools()))
+  ipcMain.on('tools:close', fromUi((w) => w.hideTools()))
+  ipcMain.on('tools:zoom', fromUi((w, delta) => w.zoom(Number(delta) || 0)))
+  ipcMain.on('tools:device', fromUi((w, kind) => w.setDevice(String(kind))))
+  ipcMain.on('tools:fullscreen', fromUi((w) => {
+    w.hideTools()
+    w.win.setFullScreen(!w.win.isFullScreen())
+  }))
+  ipcMain.on('tools:translate', fromUi((w) => {
+    w.hideTools()
+    w.translate()
+  }))
+  ipcMain.on('tools:store', fromUi((w) => {
+    w.hideTools()
+    w.createTab(WEB_STORE)
+  }))
   ipcMain.on('bookmark:toggle', fromUi((w) => w.toggleBookmark()))
   ipcMain.on('search:focus', fromUi((w) => w.focusSearch()))
   // The address typed into the active tab: go there, in that same tab.
@@ -516,6 +579,10 @@ function registerIpc() {
     'settings.set': (key, value) => {
       if (!data.setSetting(String(key), value)) return
       if (key === 'theme') nativeTheme.themeSource = value
+      if (key === 'summon') {
+        applySummonShortcut()
+        buildMenu()
+      }
       if (key === 'language') {
         buildMenu()
         for (const w of BrowserWin.all) w.reloadUi()
@@ -601,6 +668,7 @@ app.whenReady().then(async () => {
 
   registerIpc()
   buildMenu()
+  applySummonShortcut()
   new BrowserWin({ restore: data.stores.settings.data.restore })
   pendingUrls.splice(0).forEach((url) => BrowserWin.open(url))
 
@@ -609,6 +677,7 @@ app.whenReady().then(async () => {
   app.on('activate', () => !BrowserWin.all.size && new BrowserWin({ restore: true }))
 })
 
+app.on('will-quit', () => globalShortcut.unregisterAll())
 app.on('before-quit', () => {
   data.flush()
   passwords.flush()

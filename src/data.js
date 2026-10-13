@@ -5,12 +5,13 @@ const { JsonStore } = require('./store')
 const HISTORY_MAX = 20000
 const DOWNLOADS_MAX = 200
 
-const SETTING_DEFAULTS = { language: 'en', search: 'google', theme: 'system', restore: true }
+const SETTING_DEFAULTS = { language: 'en', search: 'google', theme: 'system', restore: true, summon: false }
 const SETTING_VALUES = {
   language: ['en', 'fa', 'ru'],
   search: ['google', 'duckduckgo', 'bing'],
   theme: ['system', 'light', 'dark'],
   restore: [true, false],
+  summon: [true, false],
 }
 
 const stores = {}

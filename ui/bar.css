@@ -2,11 +2,11 @@ body {
   background: var(--bg);
 }
 #bar {
-  height: 40px;
+  height: 56px;
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 0 10px 0 82px;
+  gap: 3px;
+  padding: 0 12px 0 88px;
   -webkit-app-region: drag;
   /* Entering full screen: the tabs glide into the space the window buttons leave. */
   transition: padding-left 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -19,7 +19,7 @@ body.inactive #bar > :not(#spacer) {
   opacity: 0.5;
 }
 body.fullscreen #bar {
-  padding-left: 10px;
+  padding-left: 12px;
 }
 #bar > * {
   -webkit-app-region: no-drag;
@@ -31,17 +31,17 @@ body.fullscreen #bar {
 }
 
 .icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   flex: none;
   color: var(--dim);
 }
 .icon svg {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
@@ -68,6 +68,42 @@ body.fullscreen #bar {
 }
 #reload {
   margin-right: 6px;
+}
+/* Back / forward while the page is on its way. */
+#back.going,
+#forward.going {
+  color: var(--accent);
+  opacity: 1;
+}
+#back.going svg {
+  animation: go-back 0.55s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+#forward.going svg {
+  animation: go-forward 0.55s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+@keyframes go-back {
+  45% {
+    transform: translateX(-9px);
+    opacity: 0;
+  }
+  46% {
+    transform: translateX(9px);
+    opacity: 0;
+  }
+}
+@keyframes go-forward {
+  45% {
+    transform: translateX(9px);
+    opacity: 0;
+  }
+  46% {
+    transform: translateX(-9px);
+    opacity: 0;
+  }
+}
+#tools.on {
+  background: var(--hover);
+  color: var(--fg);
 }
 /* Reload button: blue while a plain reload runs, yellow for one that skips the
    cache. It keeps turning until the page has loaded, then finishes the lap. */
@@ -111,13 +147,14 @@ body.fullscreen #bar {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 7px;
-  height: 28px;
-  padding: 0 9px;
-  border-radius: 8px;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 11px;
+  font-size: 13.5px;
   flex: 0 1 auto;
-  width: 150px;
-  min-width: 34px;
+  width: 170px;
+  min-width: 46px;
   overflow: hidden;
   color: var(--dim);
   transition:
@@ -134,22 +171,22 @@ body.fullscreen #bar {
 }
 .tab.active {
   flex: 0 0.2 auto;
-  width: 320px;
-  min-width: 120px;
+  width: 340px;
+  min-width: 130px;
   background: var(--pill);
   box-shadow: var(--pill-shadow);
   color: var(--fg);
 }
 .tab .fav {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
   flex: none;
-  border-radius: 3px;
+  border-radius: 5px;
 }
 .tab .dot {
-  width: 6px;
-  height: 6px;
-  margin: 0 4px;
+  width: 8px;
+  height: 8px;
+  margin: 0 6px;
   flex: none;
   border-radius: 50%;
   background: currentColor;
@@ -165,25 +202,50 @@ body.fullscreen #bar {
 .tab .sub {
   color: var(--dim);
 }
+/* The close button never changes the tab's layout. On an inactive tab it floats
+   over the end of the title and only fades in; showing it used to push the title
+   aside on every hover, which made the strip stutter. */
 .tab .close {
-  display: none;
-  width: 16px;
-  height: 16px;
-  flex: none;
-  border-radius: 5px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  margin-top: -12px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
   place-items: center;
   color: var(--dim);
+  opacity: 0;
+  pointer-events: none;
 }
 .tab .close svg {
-  width: 8px;
-  height: 8px;
+  width: 11px;
+  height: 11px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.6;
   stroke-linecap: round;
 }
 .tab:hover .close {
-  display: grid;
+  opacity: 1;
+  pointer-events: auto;
+}
+/* The title fades out under it instead of being re-measured. */
+.tab:not(.active):hover .label {
+  mask-image: linear-gradient(to left, transparent 30px, #000 52px);
+}
+/* The active tab always has room for its close button. */
+.tab.active .close {
+  position: static;
+  margin: 0;
+  flex: none;
+  opacity: 0.55;
+  pointer-events: auto;
+}
+.tab.active:hover .close,
+.tab.active .close:hover {
+  opacity: 1;
 }
 .tab .close:hover {
   background: var(--hover);
@@ -248,6 +310,7 @@ body.fullscreen #bar {
 }
 .tab .close {
   transition:
+    opacity 0.12s,
     background-color 0.12s,
     color 0.12s;
 }
@@ -279,7 +342,7 @@ body.fullscreen #bar {
   flex: 1;
   min-width: 0;
   height: 100%;
-  font-size: 12.5px;
+  font-size: 13.5px;
   user-select: text;
 }
 .tab .address[hidden] {
@@ -319,12 +382,12 @@ body.fullscreen #bar {
 
 /* Bookmark star inside the active tab. */
 .tab .star {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   flex: none;
   display: grid;
   place-items: center;
-  border-radius: 5px;
+  border-radius: 7px;
   color: #f5a623;
   transition: transform 0.12s;
 }
@@ -332,8 +395,8 @@ body.fullscreen #bar {
   display: none;
 }
 .tab .star svg {
-  width: 12px;
-  height: 12px;
+  width: 17px;
+  height: 17px;
   fill: currentColor;
 }
 .tab .star:hover {
@@ -345,9 +408,9 @@ body.fullscreen #bar {
 
 /* Toast: a short confirmation that appears in the bar and fades away. */
 #toast {
-  height: 26px;
-  padding: 0 11px;
-  border-radius: 13px;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: 15px;
   display: grid;
   place-items: center;
   font-size: 12px;
@@ -384,9 +447,9 @@ body.fullscreen #bar {
 #download::after {
   content: '';
   position: absolute;
-  left: 9px;
-  right: 9px;
-  bottom: 3px;
+  left: 12px;
+  right: 12px;
+  bottom: 5px;
   height: 2px;
   border-radius: 2px;
   background: var(--accent);
@@ -428,9 +491,9 @@ body.fullscreen #bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 9px;
-  border-radius: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
   background: var(--pill);
   box-shadow: var(--pill-shadow);
 }
@@ -447,10 +510,10 @@ body.fullscreen #bar {
   font-variant-numeric: tabular-nums;
 }
 #download {
-  height: 28px;
-  max-width: 200px;
-  padding: 0 9px;
-  border-radius: 8px;
+  height: 36px;
+  max-width: 220px;
+  padding: 0 12px;
+  border-radius: 10px;
   color: var(--dim);
   white-space: nowrap;
   overflow: hidden;
@@ -460,17 +523,12 @@ body.fullscreen #bar {
   background: var(--hover);
   color: var(--fg);
 }
-#actions::part(action) {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-}
 
 /* Pinned tabs: icon only, grouped at the left. */
 .tab.pinned {
   flex: none;
-  width: 34px;
-  min-width: 34px;
+  width: 46px;
+  min-width: 46px;
   padding: 0;
   justify-content: center;
 }
@@ -480,8 +538,8 @@ body.fullscreen #bar {
 }
 .tab.pinned.active {
   flex: none;
-  width: 34px;
-  min-width: 34px;
+  width: 46px;
+  min-width: 46px;
 }
 #tabs.dragging .tab {
   pointer-events: none;
@@ -505,7 +563,6 @@ body.private {
   text-transform: uppercase;
   padding: 0 6px;
 }
-#private[hidden],
-#actions[hidden] {
+#private[hidden] {
   display: none;
 }

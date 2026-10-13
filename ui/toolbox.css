@@ -1,0 +1,203 @@
+/* The toolbox: a small panel that drops from the right end of the bar. The page
+   behind this layer is see-through; clicking it closes the panel. */
+html,
+body {
+  height: 100%;
+  background: transparent;
+  transition: none;
+}
+#panel {
+  position: absolute;
+  top: 60px;
+  right: 10px;
+  width: 268px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(30px) saturate(1.6);
+  box-shadow:
+    0 0 0 0.5px var(--line),
+    0 18px 46px rgba(0, 0, 0, 0.26);
+  opacity: 0;
+  transform-origin: top right;
+  pointer-events: none;
+}
+body.open #panel {
+  opacity: 1;
+  pointer-events: auto;
+  animation: panel-in 0.22s cubic-bezier(0.2, 0.9, 0.25, 1.15);
+}
+body.closing #panel {
+  animation: panel-out 0.14s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.94);
+  }
+}
+@keyframes panel-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+/* Each block of the panel arrives a beat after the one above it. */
+body.open #panel > * {
+  animation: rise 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+body.open #panel > :nth-child(2),
+body.open #panel > :nth-child(3) {
+  animation-delay: 40ms;
+}
+body.open #panel > :nth-child(4),
+body.open #panel > :nth-child(5) {
+  animation-delay: 80ms;
+}
+body.open #panel > :nth-child(6) {
+  animation-delay: 120ms;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+h2 {
+  margin: 14px 4px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dim);
+}
+svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+button {
+  transition:
+    background-color 0.14s,
+    color 0.14s,
+    box-shadow 0.14s,
+    transform 0.12s;
+}
+button:active {
+  transform: scale(0.96);
+}
+button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  text-align: start;
+  line-height: 1.3;
+  background: var(--hover);
+}
+.tile:hover {
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+}
+.tile.on {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.segments,
+.zoom {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--hover);
+}
+.segments button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0 7px;
+  border-radius: 9px;
+  font-size: 11px;
+  color: var(--dim);
+}
+.segments button:hover {
+  color: var(--fg);
+}
+.segments button.on {
+  color: var(--fg);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+}
+.zoom button {
+  flex: 1;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--dim);
+}
+.zoom button:hover {
+  color: var(--fg);
+  background: var(--pill);
+  box-shadow: var(--pill-shadow);
+}
+#zoom-reset {
+  flex: 1.3;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+#extensions[hidden],
+#store[hidden] {
+  display: none;
+}
+#actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+#actions::part(action) {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.link {
+  display: block;
+  margin-top: 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--dim);
+}
+.link:hover {
+  color: var(--fg);
+  background: var(--hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

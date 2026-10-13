@@ -1,9 +1,9 @@
 const path = require('node:path')
-const { BrowserWindow, WebContentsView, Menu, clipboard, nativeTheme, session } = require('electron')
+const { app, BrowserWindow, WebContentsView, Menu, clipboard, nativeTheme, session } = require('electron')
 const data = require('./data')
 const { t, language } = require('./i18n')
 
-const BAR = 40
+const BAR = 56
 const UI = path.join(__dirname, '..', 'ui')
 const SEARCH_ENGINES = {
   google: 'https://www.google.com/search?q=',
@@ -18,6 +18,23 @@ const ERROR_PAGE = 'sade://app/error.html'
 const DASHBOARD = 'sade://app/dashboard.html'
 
 const { isWeb } = data
+
+// Device previews: the page is shown at the device's size, centred in the window,
+// and identifies itself as that device so sites serve their mobile layout.
+const DEVICES = {
+  mobile: {
+    width: 390,
+    height: 844,
+    agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  },
+  tablet: {
+    width: 820,
+    height: 1180,
+    agent: 'Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+  },
+}
+const DEVICE_MARGIN = 16
+const isTranslated = (url) => /^https:\/\/[^/]+\.translate\.goog\//.test(url || '')
 const bg = (isPrivate) =>
   isPrivate ? '#141416' : nativeTheme.shouldUseDarkColors ? '#1b1b1d' : '#f4f4f2'
 
@@ -56,7 +73,7 @@ class BrowserWin {
 
   static from(wc) {
     for (const w of BrowserWin.all) {
-      if (w.win.webContents === wc || w.byWc(wc)) return w
+      if (w.win.webContents === wc || w.tools.webContents === wc || w.byWc(wc)) return w
     }
     return null
   }
@@ -102,7 +119,7 @@ class BrowserWin {
       minWidth: 480,
       minHeight: 320,
       titleBarStyle: 'hiddenInset',
-      trafficLightPosition: { x: 14, y: 12 },
+      trafficLightPosition: { x: 16, y: 20 },
       backgroundColor: bg(isPrivate),
       webPreferences: {
         preload: path.join(UI, 'preload-bar.js'),
@@ -112,6 +129,19 @@ class BrowserWin {
     })
     const win = this.win
     win.loadFile(path.join(UI, 'bar.html'))
+
+    // The toolbox panel: a see-through layer over the whole window, so the panel
+    // can drop below the bar and a click anywhere else closes it. It shares the
+    // bar's preload, which is what lets it show extension buttons.
+    this.toolsOpen = false
+    this.tools = new WebContentsView({
+      webPreferences: { preload: path.join(UI, 'preload-bar.js'), sandbox: false, contextIsolation: true },
+    })
+    this.tools.setBackgroundColor('#00000000')
+    this.tools.setVisible(false)
+    this.tools.webContents.loadFile(path.join(UI, 'toolbox.html'))
+    this.tools.webContents.on('blur', () => this.hideTools())
+    win.contentView.addChildView(this.tools)
 
     BrowserWin.all.add(this)
     BrowserWin.current = this
@@ -124,6 +154,7 @@ class BrowserWin {
     win.on('resize', () => this.layout())
     win.on('enter-full-screen', () => this.pushState())
     win.on('leave-full-screen', () => this.pushState())
+    win.on('blur', () => this.hideTools())
     // Three-finger swipe, when that is what System Settings is set to.
     win.on('swipe', (_e, direction) => this.swipe(direction === 'right' ? 'back' : direction === 'left' ? 'forward' : ''))
     win.on('close', () => {
@@ -132,6 +163,7 @@ class BrowserWin {
     })
     win.on('closed', () => {
       for (const tab of [...this.tabs]) if (!tab.view.webContents.isDestroyed()) tab.view.webContents.close()
+      if (!this.tools.webContents.isDestroyed()) this.tools.webContents.close()
       this.tabs = []
       BrowserWin.all.delete(this)
       if (BrowserWin.current === this) BrowserWin.current = [...BrowserWin.all].at(-1) || null
@@ -179,7 +211,18 @@ class BrowserWin {
     const [width, height] = this.win.getContentSize()
     const top = this.htmlFullscreen ? 0 : BAR
     // Hidden tabs keep real bounds too, so background pages lay out and load normally.
-    for (const tab of this.tabs) tab.view.setBounds({ x: 0, y: top, width, height: height - top })
+    for (const tab of this.tabs) {
+      const device = !this.htmlFullscreen && DEVICES[tab.device]
+      if (!device) {
+        tab.view.setBounds({ x: 0, y: top, width, height: height - top })
+        continue
+      }
+      // A device preview: its own size (or as much as fits), centred under the bar.
+      const w = Math.min(device.width, width - 2 * DEVICE_MARGIN)
+      const h = Math.min(device.height, height - top - 2 * DEVICE_MARGIN)
+      tab.view.setBounds({ x: Math.round((width - w) / 2), y: top + DEVICE_MARGIN, width: w, height: h })
+    }
+    this.tools.setBounds({ x: 0, y: 0, width, height })
   }
 
   pushState() {
@@ -198,6 +241,8 @@ class BrowserWin {
       activeId: this.activeId,
       activeWcId: tab?.view.webContents.id,
       reloading: tab?.reloading || null,
+      going: tab?.going || null,
+      toolsOpen: this.toolsOpen,
       canBack: !!nav?.canGoBack(),
       canForward: !!nav?.canGoForward(),
       fullscreen: this.win.isFullScreen(),
@@ -262,6 +307,7 @@ class BrowserWin {
     view.setBackgroundColor(bg(this.isPrivate))
     view.setVisible(false)
     this.win.contentView.addChildView(view)
+    this.win.contentView.addChildView(this.tools) // the toolbox stays above every tab
     this.layout()
     if (!this.isPrivate) BrowserWin.notify('addTab', wc, this.win)
 
@@ -294,6 +340,7 @@ class BrowserWin {
     wc.on('did-stop-loading', () => {
       tab.loading = false
       tab.reloading = null
+      tab.going = null
       this.stopSpeedMeter(tab)
       this.pushState()
     })
@@ -494,9 +541,106 @@ class BrowserWin {
   }
 
   swipe(direction) {
-    const nav = this.active()?.view.webContents.navigationHistory
-    if (direction === 'back' && nav?.canGoBack()) nav.goBack()
-    if (direction === 'forward' && nav?.canGoForward()) nav.goForward()
+    const tab = this.active()
+    const nav = tab?.view.webContents.navigationHistory
+    const can = direction === 'back' ? nav?.canGoBack() : direction === 'forward' ? nav?.canGoForward() : false
+    if (!can) return
+    // The bar's arrow animates until the page has arrived.
+    tab.going = direction
+    this.pushState()
+    if (direction === 'back') nav.goBack()
+    else nav.goForward()
+    // A page restored from memory may never report "loading", so don't wait forever.
+    setTimeout(() => {
+      if (tab.going === direction && !tab.loading) {
+        tab.going = null
+        this.pushState()
+      }
+    }, 600)
+  }
+
+  // ----------------------------------------------------------------- toolbox
+
+  toolsState() {
+    const tab = this.active()
+    return {
+      lang: language(),
+      tabId: tab?.view.webContents.id ?? null,
+      zoom: tab ? Math.round(tab.view.webContents.getZoomFactor() * 100) : 100,
+      fullscreen: this.win.isFullScreen(),
+      device: tab?.device || 'desktop',
+      isWeb: isWeb(tab?.url),
+      translated: isTranslated(tab?.url),
+      extensions: !this.isPrivate,
+    }
+  }
+
+  toggleTools() {
+    if (this.toolsOpen) return this.hideTools()
+    this.toolsOpen = true
+    clearTimeout(this.toolsTimer)
+    this.win.contentView.addChildView(this.tools)
+    this.tools.setVisible(true)
+    this.tools.webContents.focus()
+    this.tools.webContents.send('tools:show', this.toolsState())
+    this.pushState()
+  }
+
+  hideTools() {
+    if (!this.toolsOpen || this.win.isDestroyed()) return
+    this.toolsOpen = false
+    // Hand the keyboard back to the page, unless focus has already gone elsewhere
+    // (an extension's popup, another app).
+    if (this.tools.webContents.isFocused()) this.active()?.view.webContents.focus()
+    // Let the panel play its closing animation before the layer goes away.
+    this.tools.webContents.send('tools:hide')
+    clearTimeout(this.toolsTimer)
+    this.toolsTimer = setTimeout(() => {
+      if (!this.toolsOpen && !this.win.isDestroyed()) this.tools.setVisible(false)
+    }, 160)
+    this.pushState()
+  }
+
+  refreshTools() {
+    if (this.toolsOpen) this.tools.webContents.send('tools:state', this.toolsState())
+  }
+
+  zoom(delta) {
+    const wc = this.active()?.view.webContents
+    if (!wc) return
+    wc.setZoomLevel(delta === 0 ? 0 : Math.max(-4, Math.min(6, wc.getZoomLevel() + delta)))
+    this.toast(`${Math.round(1.2 ** wc.getZoomLevel() * 100)}%`)
+    // The factor is applied a moment after the level is set.
+    setTimeout(() => this.refreshTools(), 60)
+  }
+
+  // Show the page as a phone or a tablet would, or go back to the full window.
+  setDevice(kind) {
+    const tab = this.active()
+    if (!tab || tab.pending) return
+    const device = DEVICES[kind] ? kind : null
+    if ((tab.device || null) === device) return
+    tab.device = device
+    tab.view.webContents.setUserAgent(device ? DEVICES[device].agent : app.userAgentFallback)
+    tab.view.setBorderRadius(device ? 18 : 0)
+    this.layout()
+    if (tab.url) tab.view.webContents.reload()
+    this.toast(t(device === 'mobile' ? 'Mobile view' : device === 'tablet' ? 'Tablet view' : 'Desktop view'))
+    this.refreshTools()
+  }
+
+  // Translate through Google's page translator, into the language Sade is set to;
+  // on a page that is already translated, go back to the original.
+  translate() {
+    const tab = this.active()
+    if (!tab || !isWeb(tab.url)) return
+    if (isTranslated(tab.url)) {
+      if (tab.originalUrl) this.navigate(tab.originalUrl)
+      else this.swipe('back')
+      return
+    }
+    tab.originalUrl = tab.url
+    this.navigate(`https://translate.google.com/translate?sl=auto&tl=${language()}&u=${encodeURIComponent(tab.url)}`)
   }
 
   openLibrary(section) {

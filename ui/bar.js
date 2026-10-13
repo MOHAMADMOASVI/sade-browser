@@ -89,6 +89,25 @@ sade.on('reload:speed', (bytesPerSecond) => {
   spin.updatePlaybackRate(spin.playbackRate + (target - spin.playbackRate) * 0.45)
 })
 
+// Back and forward: while the page is on its way, the arrow turns blue and keeps
+// sliding off in its direction and back in from the other side. Like the reload
+// icon, it finishes the lap it is on before going grey again.
+let goingShown = null
+function showGoing(direction) {
+  if (direction === goingShown) return
+  const previous = goingShown
+  goingShown = direction
+  if (direction) {
+    for (const id of ['back', 'forward']) $(id).classList.toggle('going', id === direction)
+    return
+  }
+  const button = $(previous)
+  const stop = () => !goingShown && button.classList.remove('going')
+  if (calm.matches) return stop()
+  button.querySelector('svg').addEventListener('animationiteration', stop, { once: true })
+  setTimeout(stop, 700)
+}
+
 function host(url) {
   try {
     const u = new URL(url)
@@ -119,6 +138,7 @@ function applyLanguage() {
   $('reload').title = `${t('Reload')}  ·  ⇧ ${t('Force Reload')}`
   $('new').title = t('New Tab')
   $('settings').title = t('Settings')
+  $('tools').title = t('Toolbox')
   $('private').textContent = t('Private')
   $('find-input').placeholder = t('Find')
 }
@@ -132,10 +152,11 @@ function render() {
   document.body.classList.toggle('private', !!state.isPrivate)
   document.body.classList.toggle('inactive', state.focused === false)
   $('private').hidden = !state.isPrivate
-  $('actions').hidden = !!state.isPrivate
   $('back').disabled = !state.canBack
   $('forward').disabled = !state.canForward
   showReload(state.reloading)
+  showGoing(state.going)
+  $('tools').classList.toggle('on', !!state.toolsOpen)
 
   const ids = new Set(state.tabs.map((tab) => tab.id))
   for (const [id, el] of elements) {
@@ -225,7 +246,6 @@ function render() {
   if (state.tabs.length) firstRender = false
   previous = { activeId: state.activeId, url: activeUrl, bookmarked: !!state.bookmarked, downloadDone: previous.downloadDone }
 
-  $('actions').setAttribute('tab', state.activeWcId ?? '')
 
   // Download pill: a thin bar along its bottom edge fills as the file arrives.
   const dl = state.download
@@ -373,6 +393,7 @@ $('forward').addEventListener('click', () => sade.send('nav:forward'))
 $('reload').addEventListener('click', (event) => sade.send('nav:reload', event.shiftKey || event.altKey))
 $('new').addEventListener('click', () => sade.send('tab:new'))
 $('settings').addEventListener('click', () => sade.send('settings:open'))
+$('tools').addEventListener('click', () => sade.send('tools:toggle'))
 $('download').addEventListener('click', () => sade.send('download:reveal'))
 
 // Show an element with its entrance animation; hide it with a short exit.
